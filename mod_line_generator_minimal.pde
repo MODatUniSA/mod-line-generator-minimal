@@ -6,7 +6,7 @@ color Black = color(0,0,0);
 
 void setup() {
   //size(1920,1080,P3D);
-  fullScreen(P2D);
+  fullScreen(P2D, SPAN);
   frameRate(120);
   noCursor();
 }
