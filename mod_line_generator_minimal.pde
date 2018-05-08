@@ -25,7 +25,6 @@ float HORIZ = 1.0;
 float VERT  = 0.0;
 float STOPPED = 0.0;
 
-boolean isLeftSide = true;
 int displayId = 1;
 
 // { dur, rate, perc, vlc, horiz }
@@ -54,8 +53,7 @@ float[][] sequence = {
   {      secs(3),  secsPerWidth(2.5),  50.0, 10.0, VERT},
   {            0, secsPerWidth(-2.5),  50.0, 10.0, VERT},
 //{     secs(30), secsPerWidth(-2.5),  50.0, 10.0, VERT},
-  {      secs(3), secsPerWidth(-2.5),  50.0, 10.0, VERT},
-  
+  {      secs(3), secsPerWidth(-2.5),  50.0, 10.0, VERT},  
 };
 
 float[][] sequenceRight = {
@@ -73,12 +71,15 @@ float[][] sequenceRight = {
   {      secs(9),  secsPerWidth(2.5),  50.0, 10.0, VERT},
   {      secs(4),            STOPPED,  50.0, 10.0, VERT},
   {            0,    secsPerWidth(5),  50.0, 10.0, VERT},
-///XXX
-{     secs(10),            STOPPED,  50.0, 10.0, VERT},
-  {      secs(4), secsPerWidth(-2.5),  50.0, 10.0, VERT},
-  {     secs(30), secsPerWidth(-2.5),  50.0, 10.0, VERT},
-  
-}
+  {     secs(10),  secsPerWidth(2.5),  50.0, 10.0, VERT},
+  {      secs(4),            STOPPED,  50.0, 10.0, VERT},
+  {            0,  secsPerHeight(10),  50.0, 10.0, HORIZ},
+  {     secs(30),  secsPerHeight(10),  50.0, 10.0, HORIZ},
+  {            0,  secsPerHeight(-5),  50.0, 10.0, HORIZ},
+  {     secs(30),  secsPerHeight(-5),  50.0, 10.0, HORIZ},
+  {            0,   secsPerHeight(5),  50.0, 10.0, HORIZ},
+  { minSec(1,20),   secsPerHeight(5),  50.0, 10.0, HORIZ},   
+};
 
 int updatesPerSecond = 120;
 
@@ -86,6 +87,7 @@ int lastFrameTime = 0;
 
 float linePhase = 0.0;
 
+long startTime = 0;
 
 float minSec(float m, float s) {
   return secs(m*60+s);
@@ -133,12 +135,16 @@ float[] getSequence(float millis) {
 }
 
 void parseArgs() {
+  // test some args
+  args = new String[] { "--right" };
   if (args != null) {
     for (int i = 0; i<args.length; i++) {
       switch (args[i]) {
         case "--right": 
-          isLeftSide=false;
-          displayId=2;
+          // all the code for switching from left to right mode is here
+          // maybe not a great idea
+          displayId = 2;
+          sequence = sequenceRight;
           break;
           
         case "-d":
@@ -153,7 +159,7 @@ void parseArgs() {
         case "-s":
         case "--start":
           try {
-            startTime = Integer.parseInt(args[++i]);
+            startTime = Long.parseLong(args[++i]);
           } catch (Exception e) {
             println("ERROR: missing arg for -s or --startTime");
           }
@@ -171,12 +177,17 @@ void parseArgs() {
 
 void setup() {
   parseArgs();
-  //size(1920,1080,P3D);
-  //fullScreen(P2D, SPAN);
+  
+  if (startTime==0) {
+    startTime = System.currentTimeMillis();
+  }
+  
   // in the VM i need to use the default renderer
-  fullScreen(displayId);
-  //we try to render faster than the monitor refresh rate and then vsync will slow us down
-  //otherwise we might drop frames if we try to anticipate the monitor refresh rate
+  //fullScreen(displayId);
+  // but on my laptop it only looks buttery with P3D
+  fullScreen(P3D, displayId);
+  //we try to render faster than the monitor refresh rate in the hope that vsync will slow us down
+  //we might drop frames if we try to anticipate the monitor refresh rate
   frameRate(100);
   noCursor();
   
@@ -192,8 +203,8 @@ void update(int frameTime) {
     frameTime-=maxUpdatePeriod;
   }
   
-  // shoulnt be using millis here...
-  float[] event = getSequence(millis());
+  //float[] event = getSequence(millis());
+  float[] event = getSequence(System.currentTimeMillis()-startTime);
   // { dur, rate, perc, vlc, horiz }
   lineRate = event[1];
   linePercentage = event[2];
