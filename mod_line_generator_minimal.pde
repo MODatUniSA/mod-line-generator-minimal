@@ -25,6 +25,9 @@ float HORIZ = 1.0;
 float VERT  = 0.0;
 float STOPPED = 0.0;
 
+boolean isLeftSide = true;
+int displayId = 1;
+
 // { dur, rate, perc, vlc, horiz }
 float[][] sequence = {
   // first duration is treated as 0.0 regardless of value
@@ -54,6 +57,28 @@ float[][] sequence = {
   {      secs(3), secsPerWidth(-2.5),  50.0, 10.0, VERT},
   
 };
+
+float[][] sequenceRight = {
+  {            0,   secsPerWidth(15),  50.0, 10.0, VERT},
+  {     secs(30),   secsPerWidth(15),  50.0, 10.0, VERT},
+  {            0,   secsPerWidth(-5),  50.0, 10.0, VERT},
+  {     secs(30),   secsPerWidth(-5),  50.0, 10.0, VERT},
+  {            0,    secsPerWidth(5),  50.0, 10.0, VERT},
+  {     secs(30),    secsPerWidth(5),  50.0, 10.0, VERT},
+  {            0,  secsPerWidth(-15),  50.0, 10.0, VERT},  
+  {     secs(35),  secsPerWidth(-15),  50.0, 10.0, VERT},
+  {            0,   secsPerWidth(-5),  50.0, 10.0, VERT},
+  {     secs(30),   secsPerWidth(-5),  50.0, 10.0, VERT},
+  {            0,    secsPerWidth(5),  50.0, 10.0, VERT},
+  {      secs(9),  secsPerWidth(2.5),  50.0, 10.0, VERT},
+  {      secs(4),            STOPPED,  50.0, 10.0, VERT},
+  {            0,    secsPerWidth(5),  50.0, 10.0, VERT},
+///XXX
+{     secs(10),            STOPPED,  50.0, 10.0, VERT},
+  {      secs(4), secsPerWidth(-2.5),  50.0, 10.0, VERT},
+  {     secs(30), secsPerWidth(-2.5),  50.0, 10.0, VERT},
+  
+}
 
 int updatesPerSecond = 120;
 
@@ -107,13 +132,56 @@ float[] getSequence(float millis) {
   return res;
 }
 
+void parseArgs() {
+  if (args != null) {
+    for (int i = 0; i<args.length; i++) {
+      switch (args[i]) {
+        case "--right": 
+          isLeftSide=false;
+          displayId=2;
+          break;
+          
+        case "-d":
+        case "--display":
+          try {
+            displayId = Integer.parseInt(args[++i]);
+          } catch (Exception e) {
+            println("ERROR: missing arg for -d or --display");
+          }
+          break;
+          
+        case "-s":
+        case "--start":
+          try {
+            startTime = Integer.parseInt(args[++i]);
+          } catch (Exception e) {
+            println("ERROR: missing arg for -s or --startTime");
+          }
+          break;
+        
+        case "-h":
+        case "--help":
+          println("--right        run right side display");
+          println("--display <n>  override display id");
+          break;
+      }
+    }
+  }
+}
+
 void setup() {
+  parseArgs();
   //size(1920,1080,P3D);
   //fullScreen(P2D, SPAN);
-  fullScreen(1);
-  frameRate(120);
+  // in the VM i need to use the default renderer
+  fullScreen(displayId);
+  //we try to render faster than the monitor refresh rate and then vsync will slow us down
+  //otherwise we might drop frames if we try to anticipate the monitor refresh rate
+  frameRate(100);
   noCursor();
   
+  // just debugging
+  println(System.currentTimeMillis());
 }
 
 void update(int frameTime) {
@@ -132,10 +200,10 @@ void update(int frameTime) {
   verticalLineCount = (int)event[3];
   isHorizontal = event[4]==0.0;
   
-  print("lineRate "); println(lineRate);
-  print("isHorizontal "); println(isHorizontal);
-  print("verticalLineCount "); println(verticalLineCount);
-  print("linePercentage "); println(linePercentage);
+  //print("lineRate "); println(lineRate);
+  //print("isHorizontal "); println(isHorizontal);
+  //print("verticalLineCount "); println(verticalLineCount);
+  //print("linePercentage "); println(linePercentage);
   
   // lineRate is secs/screen
   // lineRate/verticalLineCount is secs/line
